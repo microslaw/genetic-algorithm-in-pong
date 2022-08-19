@@ -1,10 +1,11 @@
-from dis import dis
 import random
 import this
 import pygame
 
 bouncerHeight = 32
 bouncerSpeed = 0
+bounceCount = 0
+IsBallIn = True
 p1Bouncer = None
 p2Bouncer = None
 winner = None
@@ -22,9 +23,9 @@ class Ball:
         self.ySpeed = ySpeed
         self.modifier
 
-    def move(self, speed):
-        dx =  self.xSpeed * self.modifier
-        dy =  self.ySpeed * self.modifier
+    def move(self):
+        dx = self.xSpeed * self.modifier
+        dy = self.ySpeed * self.modifier
         self.x -= dx
         self.y -= dy
 
@@ -50,7 +51,7 @@ class Ball:
                             self.y +=1
                         else:
                             self.x +=1
-                            self.try_bouncing()
+                        self.try_bouncing()
                 else:
                     for i in range(v[1]+1):
                         if i == v[1]//2:
@@ -64,20 +65,22 @@ class Ball:
             tmp = self.ySpeed
             self.ySpeed = abs(self.xSpeed)
             self.xSpeed = abs(tmp) * sgn(self.xSpeed)
+            bounceCount+=1
             return 0
         if self.y == 255:
             tmp = self.ySpeed
             self.ySpeed = abs(self.xSpeed) * -1
             self.xSpeed = abs(tmp) * sgn(self.xSpeed)
+            bounceCount+=1
             return 0
 
         if self.x == 1:
             modifier = p1Bouncer.get_bounce_modifier(p1Bouncer, self.y)
-            if modifier == 0:
-                return -1
+            bounceCount += 1
+                
         if self.x == 254:
             modifier = p1Bouncer.get_bounce_modifier(p1Bouncer, self.y)
-            return
+            bounceCount += 1
 
 class Bouncer:
     def __init__(self, posX) -> None:
@@ -102,7 +105,41 @@ class Bouncer:
             if distanceToY<bouncerHeight//4:
                 return 1.5
             return 1
+        IsBallIn = False
+
+
+def play_a_game(players, seed = random.randrange(1016)):
+    p1,p2 = players
+    isBallIn = True
+    bounceCount = 0
+
+    p1Bouncer = Bouncer(1)
+    p2Bouncer = Bouncer(254)
+    ball = Ball()
+
+    while isBallIn:
+
+        ball.move()
+        
+        p1Action = p1.decide()
+        p2Action = p2.decide()
+
+        
+        if p1Action == "up":
+            p1Bouncer.up()
+        elif p1Action == "down":
+            p1Bouncer.down()
+
+        if p2Action == "up":
+            p2Bouncer.up()
+        elif p2Action == "down":
+            p2Bouncer.down()
+
+    if ball.x == 0:
         return 0
+    else:
+        return 1
+
 
 
 def read_game(filename):
@@ -115,16 +152,4 @@ def save_game(filename):
 
 def draw_game(ball, p1,p2):
     pass
-
-def play_a_game(p1,p2, seed = random.randrange(513)):
-    isBallIn = True
-    bounceCount = 0
-
-    p1Bouncer = Bouncer(1)
-    p2Bouncer = Bouncer(254)
-
-    while isBallIn:
-        pass
-
-
 
