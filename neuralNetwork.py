@@ -7,8 +7,12 @@ def fill0(num, lenght = 4):
     num = str(num)
     return ("0"*(lenght-len(num))) + num
 
-def decode_string(string):
+def convert_to_fraction(string):
     return int(string)*0.0002 - 1
+
+# 3 is used instead of e to reduce inference time
+def tanh2(x):
+    return  (3**x-3**(-x))/(3**x+3**(-x))
 
 class Player:
     def __init__(self, gen, playerId, brainSize, brain: str = None) -> None:
@@ -36,13 +40,12 @@ class Player:
 
     def load_brain(self):
         weights  = self.brain[:self.brainSize*6]
-        splitWeights = (weights[(i*6)+2:(i+1)*6] for i in range(self.brainSize))
-        connectionIndexes = ((weights[(i*6)],weights[(i*6)+1]) for i in range(self.brainSize))
-        self.weightsValues = (decode_string(w) for w in splitWeights)
+        splitWeights = [weights[(i*6)+2:(i+1)*6] for i in range(self.brainSize)]
+        self.connectionIndexes = [(int(weights[(i*6)]),int(weights[(i*6)+1])) for i in range(self.brainSize)]
+        print(self.connectionIndexes)
+        self.weightsValues = [convert_to_fraction(w) for w in splitWeights]
         biases = self.brain[-40:]
-        self.biasesValues = (decode_string(biases[i*4:(i+1)*4]) for i in range(5))
-
-        
+        self.biasesValues = [convert_to_fraction(biases[i*4:(i+1)*4]) for i in range(5)]
 
 # letters stand for:
 # e - enemy height
@@ -52,7 +55,25 @@ class Player:
 # c - bounce count
 
     def decide(self, enemyHeight, selfHeight, ballHeigt, ballDistance, bounceCount):
-        neuronValues = [b for b in self.biasesValues]
+        neuronValues = [0 for i in range(10)]
+        neuronValues[0] = enemyHeight/256
+        neuronValues[1] = selfHeight/256
+        neuronValues[2] = ballHeigt/256
+        neuronValues[3] = ballDistance/256
+        neuronValues[4] = bounceCount/10
 
-player = Player(0,0,16,fill0(random.randint(10**136))).decide()
+        for i in range(len(self.biasesValues)):
+            neuronValues[i+5] += self.biasesValues[i]
+
+        for i in range(self.brainSize):
+            neuronValues[self.connectionIndexes[i][1]] += tanh2(self.weightsValues[i] * neuronValues[self.connectionIndexes[i][0]])
+        decisions = neuronValues[7:]
+        return decisions.index(max(decisions))
+
+rand = "2554709769198858928407350531403821301152000140200328634173720731029998053506936549977826827267884950915920030085802142193280748501331835" #random.randint(0,10**136)
+print(rand)
+player = Player(0, 0, 16, fill0(rand))
+player.load_brain()
+print(player.decide(0,0,0,0,0))
+
 
