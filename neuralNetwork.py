@@ -1,7 +1,5 @@
-from itertools import count
 import random
-from turtle import distance
-import numpy
+import os
 
 def fill0(num, lenght = 4):
     num = str(num)
@@ -15,8 +13,8 @@ def tanh2(x):
     return  (3**x-3**(-x))/(3**x+3**(-x))
 
 class Player:
-    def __init__(self, gen, playerId, brainSize, brain: str = None) -> None:
-        self.name = f"game{fill0(playerId)}gen{fill0(gen)}"
+    def __init__(self, gen, playerId, brainSize, brain: str = None, parent: str = "None") -> None:
+        self.name = f"player{fill0(playerId)}gen{fill0(gen)}"
         self.brainSize = brainSize
         
 # brain construction:
@@ -36,7 +34,7 @@ class Player:
             for j in range(5):
                 brain += fill0(random.randrange(10000))
         self.brain = brain 
-
+        self.load_brain()
 
     def load_brain(self):
         weights  = self.brain[:self.brainSize*6]
@@ -70,10 +68,12 @@ class Player:
         decisions = neuronValues[7:]
         return decisions.index(max(decisions))
 
-rand = "2554709769198858928407350531403821301152000140200328634173720731029998053506936549977826827267884950915920030085802142193280748501331835" #random.randint(0,10**136)
-print(rand)
-player = Player(0, 0, 16, fill0(rand))
-player.load_brain()
-print(player.decide(0,0,0,0,0))
+    def save(self, attemptNo):
+        file = f"\\genetic-algorithm-in-pong\\data\\attempt{attemptNo}\\gen{fill0(self.gen)}\\players\\{self.name}.txt"
+        filepath = os.getcwd() + file
+        toWrite = f"{self.brain}/n"
+        toWrite +=f"{self.parent}/n"
+        with open(self.name, "w") as file:
+            file.write(toWrite)
 
 
