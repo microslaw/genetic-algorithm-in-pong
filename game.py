@@ -33,6 +33,9 @@ class Ball:
         print(self.xSpeed, self.bounceSpotModifier, self.timeModifier)
         dx = self.xSpeed * self.bounceSpotModifier * self.timeModifier
         dy = self.ySpeed * self.bounceSpotModifier*2
+        preSimulationX = self.x
+        preSimulationY = self.y
+        
         self.x += dx
         self.y += dy
 
@@ -48,26 +51,9 @@ class Ball:
             #breaking velocity vector into smaller to implement collision
             while (abs(dx) + abs(dy)>0):
                 print("maybe out of bounds backtracking", self.x, self.y)
+
                 if abs(dx)>abs(dy):
                     v = (round(dx/abs(dy)),sgn(dy))
-                elif abs(dx)<abs(dy):
-                    v = (sgn(dx),round(dy/abs(dx)))
-                else:
-                    v = (sgn(dx),sgn(dy))
-
-                dx -= v[0]
-                dy -= v[1]
-                
-
-                if abs(v[0]) == 1 and abs(v[1]) == 1:
-                    self.y +=sdy
-                    print("pre check", self.x, self.y, sdx, sdy)
-                    if self.is_bouncing():
-                        break
-                    self.x +=sdx
-                    if self.is_bouncing():
-                        break
-                if abs(v[1]) == 1:
                     for i in range(abs(v[0])+1):
                         if i == v[0]//2:
                             self.y +=sdy
@@ -75,7 +61,8 @@ class Ball:
                             self.x +=sdx
                         if self.is_bouncing():
                             break
-                if abs(v[0]) == 1:
+                elif abs(dx)<abs(dy):
+                    v = (sgn(dx),round(dy/abs(dx)))
                     for i in range(abs(v[1])+1):
                         if i == v[1]//2:
                             self.x +=sdx
@@ -83,10 +70,18 @@ class Ball:
                             self.y +=sdy
                         if self.is_bouncing():
                             break
+                else:
+                    v = (sgn(dx),sgn(dy))
+                    self.y +=sdy
+                    print("pre check", self.x, self.y, sdx, sdy)
+                    if self.is_bouncing():
+                        break
+                    self.x +=sdx
+                    if self.is_bouncing():
+                        break
 
-                #self.x += dx
-                #self.y += dy
-
+                dx -= v[0]
+                dy -= v[1]
 
     def is_bouncing(self):
 
@@ -150,7 +145,6 @@ class Bouncer:
             return 1
         global IsBallIn
         IsBallIn = False
-        exit()
         return 0
 
 
