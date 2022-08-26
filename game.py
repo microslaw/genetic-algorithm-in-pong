@@ -5,7 +5,7 @@ import os
 
 
 
-bouncerHeight = 32
+bouncerHeight = 100
 bouncerSpeed = 0
 bounceCount = 0
 IsBallIn = True
@@ -30,16 +30,16 @@ class Ball:
         self.bounceSpotModifier = 1
 
     def move(self):
-        print(self.xSpeed, self.bounceSpotModifier, self.timeModifier)
         dx = self.xSpeed * self.bounceSpotModifier * self.timeModifier
         dy = self.ySpeed * self.bounceSpotModifier*2
         preSimulationX = self.x
         preSimulationY = self.y
+        preSimulationDX = dx
+        preSimulationDY = dy 
         
         self.x += dx
         self.y += dy
 
-        print("maybe out of bounds", self.x, self.y)
         #if ball is out of bounds, backtrack to the edge of the screen where it should bounce
         if self.x>253 or self.x<2 or self.y >254 or self.y<1:
             self.x -= dx
@@ -47,10 +47,8 @@ class Ball:
             sdx = sgn(dx)
             sdy = sgn(dy)
 
-
             #breaking velocity vector into smaller to implement collision
             while (abs(dx) + abs(dy)>0):
-                print("maybe out of bounds backtracking", self.x, self.y)
 
                 if abs(dx)>abs(dy):
                     v = (round(dx/abs(dy)),sgn(dy))
@@ -73,7 +71,6 @@ class Ball:
                 else:
                     v = (sgn(dx),sgn(dy))
                     self.y +=sdy
-                    print("pre check", self.x, self.y, sdx, sdy)
                     if self.is_bouncing():
                         break
                     self.x +=sdx
@@ -83,11 +80,18 @@ class Ball:
                 dx -= v[0]
                 dy -= v[1]
 
+        pygame.draw.rect(win, (255,255,0), pygame.Rect(self.x, self.y, 1, 1))
+
+        leftoverDX = preSimulationDX -(self.x - preSimulationX)
+        leftoverDY = preSimulationDY -(self.y - preSimulationY)
+        self.x += sgn(self.xSpeed) * leftoverDY
+        self.y += sgn(self.ySpeed) * leftoverDX 
+
+
     def is_bouncing(self):
 
         global bounceCount
 
-        print("directions", self.xSpeed, self.ySpeed)
 
         if self.y == 0 and  self.ySpeed < 0:
             tmp = self.ySpeed
@@ -100,10 +104,8 @@ class Ball:
             self.ySpeed = abs(self.xSpeed) * -1
             self.xSpeed = abs(tmp) * sgn(self.xSpeed)
             return True
-        print("self.x: ",self.x)
 
         if self.x == 1 and self.xSpeed < 0:
-            print("bounce modifier")
             self.bounceSpotModifier = p1Bouncer.get_bounce_modifier(self.y)
             bounceCount += 1
             return True
@@ -116,6 +118,8 @@ class Ball:
         
         return False
 
+
+#
 class Bouncer:
     def __init__(self, posX) -> None:
         self.posX = posX
@@ -173,17 +177,17 @@ def play_a_game(players: tuple, seed = random.randrange(1016)):
         timer += 1
         ball.timeModifier = round(bounceCount*bounceCount*0.01 + 1)
         ball.move()
-        p1Action = p1.decide(p2Bouncer.middle, p1Bouncer.middle, ball.y, ball.x, bounceCount)
-        p2Action = p2.decide(p1Bouncer.middle, p2Bouncer.middle, ball.y, 256 - ball.x, bounceCount)
-        if p1Action == 0:
-            p1Bouncer.up()
-        elif p1Action == 2:
-            p1Bouncer.down()
+        # p1Action = p1.decide(p2Bouncer.middle, p1Bouncer.middle, ball.y, ball.x, bounceCount)
+        # p2Action = p2.decide(p1Bouncer.middle, p2Bouncer.middle, ball.y, 256 - ball.x, bounceCount)
+        # if p1Action == 0:
+        #     p1Bouncer.up()
+        # elif p1Action == 2:
+        #     p1Bouncer.down()
 
-        if p2Action == 0:
-            p2Bouncer.up()
-        elif p2Action == 2:
-            p2Bouncer.down()
+        # if p2Action == 0:
+        #     p2Bouncer.up()
+        # elif p2Action == 2:
+        #     p2Bouncer.down()
 
     #returns data needed to save, cannot save here because does not know gen and gameId
     #log[0] is idex of winner in players
@@ -212,10 +216,10 @@ def read_game(gen, gameId):
 def initialize_drawing():
     pygame.init()
     global win 
-    win = pygame.display.set_mode((256,256))
+    win = pygame.display.set_mode((255,255))
     pygame.display.set_caption("Pong")
 
-def draw_game(ball, p1Bouncer, p2Bouncer):
+def draw_game(ball, p1Bouncer: Bouncer, p2Bouncer:Bouncer):
 
     global IsBallIn
     global win
@@ -224,8 +228,10 @@ def draw_game(ball, p1Bouncer, p2Bouncer):
         if event.type == pygame.QUIT:
             IsBallIn = False
     pygame.draw.rect(win, (255,0,0), pygame.Rect(ball.x, ball.y, 1, 1))
-    pygame.draw.rect(win, (0,0,255), pygame.Rect(p1Bouncer.posX, p1Bouncer.lowEnd, 1, p1Bouncer.lowEnd - p1Bouncer.highEnd))
-    pygame.draw.rect(win, (0,255,0), pygame.Rect(p2Bouncer.posX, p2Bouncer.lowEnd, 1, p2Bouncer.lowEnd - p2Bouncer.highEnd))
+
+    print(p1Bouncer.posX, p1Bouncer.lowEnd, 1, p1Bouncer.lowEnd - p1Bouncer.highEnd)
+    pygame.draw.rect(win, (0,0,255), pygame.Rect(p1Bouncer.posX, p1Bouncer.highEnd, 1, p1Bouncer.lowEnd - p1Bouncer.highEnd))
+    pygame.draw.rect(win, (0,255,0), pygame.Rect(p2Bouncer.posX-1, p2Bouncer.highEnd, 1, p2Bouncer.lowEnd - p2Bouncer.highEnd))
 
 print(play_a_game((Player(0,0,16, "2065216056286540731964788133229977355704872542009971429237186953114294405058590826391403880056898570023122232212663581462261372286922779"),
              Player(0,0,16, "2962002178200263828017493067689927259614674561082926627623621204269956299544861619071519854706114178017987120872598502206647480500149283")),
