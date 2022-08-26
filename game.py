@@ -23,7 +23,7 @@ class Ball:
         self.x = 128
         self.y = y
         self.xSpeed = xSpeed
-        self.ySpeed = ySpeed
+        self.ySpeed = ySpeed * 2
         #timeModifier speeds up the ball over time (time is measured in bounces)
         self.timeModifier = 1
         #bounceSpotModifier speeds up the ball based on where it hits bouncer
@@ -31,7 +31,7 @@ class Ball:
 
     def move(self):
         dx = self.xSpeed * self.bounceSpotModifier * self.timeModifier
-        dy = self.ySpeed * self.bounceSpotModifier*2
+        dy = self.ySpeed * self.bounceSpotModifier
         preSimulationX = self.x
         preSimulationY = self.y
         preSimulationDX = dx
