@@ -5,7 +5,7 @@ import os
 
 
 
-bouncerHeight = 100
+bouncerHeight = 300
 bouncerSpeed = 0
 bounceCount = 0
 IsBallIn = True
@@ -30,8 +30,8 @@ class Ball:
         self.bounceSpotModifier = 1
 
     def move(self):
-        dx = self.xSpeed * self.bounceSpotModifier * self.timeModifier
-        dy = self.ySpeed * self.bounceSpotModifier
+        dx = round(self.xSpeed * self.bounceSpotModifier * self.timeModifier)
+        dy = round(self.ySpeed * self.bounceSpotModifier) 
         preSimulationX = self.x
         preSimulationY = self.y
         preSimulationDX = dx
@@ -48,7 +48,9 @@ class Ball:
             sdy = sgn(dy)
 
             #breaking velocity vector into smaller to implement collision
+            print("a", self.x, self.y)
             while (abs(dx) + abs(dy)>0):
+                print(dx, dy)
 
                 if abs(dx)>abs(dy):
                     v = (round(dx/abs(dy)),sgn(dy))
@@ -107,11 +109,18 @@ class Ball:
 
         if self.x == 1 and self.xSpeed < 0:
             self.bounceSpotModifier = p1Bouncer.get_bounce_modifier(self.y)
+            tmp = self.xSpeed
+            self.xSpeed = abs(self.ySpeed)
+            self.ySpeed = abs(tmp) * sgn(self.ySpeed)
             bounceCount += 1
             return True
 
         if self.x == 254 and self.xSpeed > 0:
+            print("bouncing from green")
             self.bounceSpotModifier = p2Bouncer.get_bounce_modifier(self.y)
+            tmp = self.xSpeed
+            self.xSpeed = abs(self.ySpeed) * -1
+            self.ySpeed = abs(tmp) * sgn(self.ySpeed)
             bounceCount += 1
             return True
 
@@ -158,7 +167,7 @@ def play_a_game(players: tuple, seed = random.randrange(1016)):
     p2 : Player
     p1,p2 = players
     global IsBallIn
-    isBallIn = True
+    IsBallIn  = True
     global bounceCount
     bounceCount = 0
     global p1Bouncer, p2Bouncer
@@ -170,8 +179,10 @@ def play_a_game(players: tuple, seed = random.randrange(1016)):
 
     initialize_drawing()
 
-    while isBallIn:
+    while IsBallIn:
         draw_game(ball, p1Bouncer, p2Bouncer)
+        if bounceCount == 18:
+            input()
 
         #print(timer)
         timer += 1
@@ -221,15 +232,9 @@ def initialize_drawing():
 
 def draw_game(ball, p1Bouncer: Bouncer, p2Bouncer:Bouncer):
 
-    global IsBallIn
     global win
     pygame.display.update()
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            IsBallIn = False
     pygame.draw.rect(win, (255,0,0), pygame.Rect(ball.x, ball.y, 1, 1))
-
-    print(p1Bouncer.posX, p1Bouncer.lowEnd, 1, p1Bouncer.lowEnd - p1Bouncer.highEnd)
     pygame.draw.rect(win, (0,0,255), pygame.Rect(p1Bouncer.posX, p1Bouncer.highEnd, 1, p1Bouncer.lowEnd - p1Bouncer.highEnd))
     pygame.draw.rect(win, (0,255,0), pygame.Rect(p2Bouncer.posX-1, p2Bouncer.highEnd, 1, p2Bouncer.lowEnd - p2Bouncer.highEnd))
 
