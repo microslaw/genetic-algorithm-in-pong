@@ -2,10 +2,11 @@ import random
 import pygame
 from neuralNetwork import * 
 import os
+import time
 
 
 
-bouncerHeight = 300
+bouncerHeight = 32
 bouncerSpeed = 0
 bounceCount = 0
 IsBallIn = True
@@ -30,12 +31,12 @@ class Ball:
         self.bounceSpotModifier = 1
 
     def move(self):
-        dx = round(self.xSpeed * self.bounceSpotModifier * self.timeModifier)
+        dx = round(self.xSpeed * self.timeModifier)
         dy = round(self.ySpeed * self.bounceSpotModifier) 
         preSimulationX = self.x
         preSimulationY = self.y
         preSimulationDX = dx
-        preSimulationDY = dy 
+        preSimulationDY = dy
         
         self.x += dx
         self.y += dy
@@ -48,10 +49,8 @@ class Ball:
             sdy = sgn(dy)
 
             #breaking velocity vector into smaller to implement collision
-            print("a", self.x, self.y)
             while (abs(dx) + abs(dy)>0):
-                print(dx, dy)
-
+                pygame.draw.rect(win, (0,255,255), pygame.Rect(self.x, self.y, 1, 1))
                 if abs(dx)>abs(dy):
                     v = (round(dx/abs(dy)),sgn(dy))
                     for i in range(abs(v[0])+1):
@@ -116,7 +115,6 @@ class Ball:
             return True
 
         if self.x == 254 and self.xSpeed > 0:
-            print("bouncing from green")
             self.bounceSpotModifier = p2Bouncer.get_bounce_modifier(self.y)
             tmp = self.xSpeed
             self.xSpeed = abs(self.ySpeed) * -1
@@ -184,21 +182,20 @@ def play_a_game(players: tuple, seed = random.randrange(1016)):
         if bounceCount == 18:
             input()
 
-        #print(timer)
         timer += 1
         ball.timeModifier = round(bounceCount*bounceCount*0.01 + 1)
         ball.move()
-        # p1Action = p1.decide(p2Bouncer.middle, p1Bouncer.middle, ball.y, ball.x, bounceCount)
-        # p2Action = p2.decide(p1Bouncer.middle, p2Bouncer.middle, ball.y, 256 - ball.x, bounceCount)
-        # if p1Action == 0:
-        #     p1Bouncer.up()
-        # elif p1Action == 2:
-        #     p1Bouncer.down()
+        p1Action = p1.decide(p2Bouncer.middle, p1Bouncer.middle, ball.y, ball.x, bounceCount)
+        p2Action = p2.decide(p1Bouncer.middle, p2Bouncer.middle, ball.y, 256 - ball.x, bounceCount)
+        if p1Action == 0:
+            p1Bouncer.up()
+        elif p1Action == 2:
+            p1Bouncer.down()
 
-        # if p2Action == 0:
-        #     p2Bouncer.up()
-        # elif p2Action == 2:
-        #     p2Bouncer.down()
+        if p2Action == 0:
+            p2Bouncer.up()
+        elif p2Action == 2:
+            p2Bouncer.down()
 
     #returns data needed to save, cannot save here because does not know gen and gameId
     #log[0] is idex of winner in players
@@ -227,17 +224,19 @@ def read_game(gen, gameId):
 def initialize_drawing():
     pygame.init()
     global win 
+    global bounceCount
     win = pygame.display.set_mode((255,255))
     pygame.display.set_caption("Pong")
 
 def draw_game(ball, p1Bouncer: Bouncer, p2Bouncer:Bouncer):
 
     global win
+    time.sleep(0.01)
     pygame.display.update()
     pygame.draw.rect(win, (255,0,0), pygame.Rect(ball.x, ball.y, 1, 1))
     pygame.draw.rect(win, (0,0,255), pygame.Rect(p1Bouncer.posX, p1Bouncer.highEnd, 1, p1Bouncer.lowEnd - p1Bouncer.highEnd))
     pygame.draw.rect(win, (0,255,0), pygame.Rect(p2Bouncer.posX-1, p2Bouncer.highEnd, 1, p2Bouncer.lowEnd - p2Bouncer.highEnd))
 
 print(play_a_game((Player(0,0,16, "2065216056286540731964788133229977355704872542009971429237186953114294405058590826391403880056898570023122232212663581462261372286922779"),
-             Player(0,0,16, "2962002178200263828017493067689927259614674561082926627623621204269956299544861619071519854706114178017987120872598502206647480500149283")),
-             1000))
+             Player(0,0,16, "2962002178200263828017493067689927259614674561082926627623621204269956299544861619071519854706114178017987120872598502206647480500149283"))))
+input()
