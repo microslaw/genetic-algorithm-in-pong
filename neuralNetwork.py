@@ -9,8 +9,47 @@ def convert_to_fraction(string):
     return int(string)*0.0002 - 1
 
 # 3 is used instead of e to reduce inference time
-def tanh2(x):
+def tahn3(x):
     return  (3**x-3**(-x))/(3**x+3**(-x))
+
+def mutate(oryginalBrain):
+
+    r = random.random()
+    
+    if r < 0.25:
+        return swap(oryginalBrain)
+    elif r < 0.5:
+        return delete(oryginalBrain)
+    elif r < 0.75:
+        return delete(oryginalBrain)
+    else:
+        return change(oryginalBrain)
+
+
+def swap(oryginalBrain):
+    r1 = random.randrange(len(oryginalBrain))
+    r2 = random.randrange(len(oryginalBrain))
+    return oryginalBrain[:min(r1,r2)] + oryginalBrain[max(r1,r2)] + oryginalBrain[min(r1,r2) + 1:max(r1,r2)] + oryginalBrain[min(r1,r2)] + oryginalBrain[max(r1,r2) + 1:] 
+
+def delete(oryginalBrain, brainSize = 16):
+    if len(oryginalBrain) <= 6*brainSize:
+        return add(oryginalBrain, brainSize)
+    r = random.randrange(len(oryginalBrain))
+    return oryginalBrain[:r] + oryginalBrain[r+1:]
+
+def add(oryginalBrain, brainSize = 16):
+    if len(oryginalBrain) > 50 + (6 * brainSize):
+        return delete(oryginalBrain, brainSize)
+    r1 = random.randrange(len(oryginalBrain))
+    r2 = random.randrange(len(10))
+    return oryginalBrain[:r1] + str(r2) + oryginalBrain[r1:]
+
+def change(oryginalBrain):
+    r1 = random.randrange(len(oryginalBrain))
+    r2 = random.randrange(len(10))
+    return oryginalBrain[:r1] + str(r2) + oryginalBrain[r1+1:]
+
+
 
 class Player:
     def __init__(self, gen, playerId, brainSize, brain: str = None, parent: str = "None") -> None:
@@ -18,7 +57,7 @@ class Player:
         self.brainSize = brainSize
         
 # brain construction:
-# (154312 x brain size) + (1523 x 10) 
+# (154312 x brain size) + (1523 x 5) 
 # first two digits are indexes of neurons they are connecting, with the latter being altered. Identical digits result in neuron changing its own value
 # This allows for connection of neurons in the same layer as well as RNN
 # four latter digits represent weight of a connection
@@ -30,7 +69,7 @@ class Player:
         if brain == None:
             brain = ""
             for i in range(brainSize):
-                brain += fill0(random.randrange(1000000), lenght = 6*brainSize)
+                brain += fill0(random.randrange(1000000), lenght = 6)
             for j in range(5):
                 brain += fill0(random.randrange(10000))
         self.brain = brain 
@@ -40,7 +79,6 @@ class Player:
         weights  = self.brain[:self.brainSize*6]
         splitWeights = [weights[(i*6)+2:(i+1)*6] for i in range(self.brainSize)]
         self.connectionIndexes = [(int(weights[(i*6)]),int(weights[(i*6)+1])) for i in range(self.brainSize)]
-        print(self.connectionIndexes)
         self.weightsValues = [convert_to_fraction(w) for w in splitWeights]
         biases = self.brain[-40:]
         self.biasesValues = [convert_to_fraction(biases[i*4:(i+1)*4]) for i in range(5)]
@@ -64,7 +102,7 @@ class Player:
             neuronValues[i+5] += self.biasesValues[i]
 
         for i in range(self.brainSize):
-            neuronValues[self.connectionIndexes[i][1]] += tanh2(self.weightsValues[i] * neuronValues[self.connectionIndexes[i][0]])
+            neuronValues[self.connectionIndexes[i][1]] += tahn3(self.weightsValues[i] * neuronValues[self.connectionIndexes[i][0]])
         decisions = neuronValues[7:]
         return decisions.index(max(decisions))
 
@@ -73,7 +111,7 @@ class Player:
         filepath = os.getcwd() + file
         toWrite = f"{self.brain}/n"
         toWrite +=f"{self.parent}/n"
-        with open(self.name, "w") as file:
+        with open(filepath, "w") as file:
             file.write(toWrite)
 
 
