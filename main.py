@@ -28,7 +28,7 @@ while generation <= maxGenerations:
         save_game((players[i],players[i+1]), log, generation, i, attemptNo )
         winner = log[0]
         looser = 0 if log[0] == 1 else 1
-        players[i+looser] = Player(generation, players[i+looser].playerId, brainSize, mutate_brain(players[i+winner].brain))
+        players[i+looser] = Player(generation, players[i+looser].playerId, brainSize, mutate_brain(players[i+winner].brain), players[i+winner].name)
         players[i+looser].save_network(attemptNo)
         averageBounceCount += log[1]
         if maxBounceCount< log[1]:

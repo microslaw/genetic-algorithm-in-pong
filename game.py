@@ -222,7 +222,9 @@ def replay_game(gen, gameId, attemptNo):
     with open(filepath, 'r') as rfile:
         toRead = rfile.read()
     data = toRead.split('\n')
-    print(data)
+    playersNames = data[0].split(" vs ")
+    players = (get_player(playersNames[0], attemptNo), get_player(playersNames[1], attemptNo))
+    play_a_game(players, seed = int(data[1]), doDisplay = True)
 
 def initialize_drawing():
     pygame.init()
@@ -248,3 +250,5 @@ def draw_game(ball, p1Bouncer: Bouncer, p2Bouncer:Bouncer):
     bouncer2Img = pygame.Rect(p2Bouncer.posX-1, p2Bouncer.highEnd, 1, p2Bouncer.lowEnd - p2Bouncer.highEnd)
 
     pygame.display.update()
+
+replay_game(68, 86, 2)

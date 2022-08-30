@@ -115,6 +115,7 @@ class Player:
         filepath = os.getcwd() + file
         toWrite = f"{self.brain}\n"
         toWrite +=f"{self.parent}\n"
+        toWrite += f"{self.brainSize}\n"
 
         if not os.path.exists(filepath.strip(f"\\{self.name}.txt")):
             os.makedirs(filepath.strip(f"\\{self.name}.txt"))
@@ -122,4 +123,15 @@ class Player:
         with open(filepath, "w") as wfile:
             wfile.write(toWrite)
 
+def get_player(name, attemptNo):
 
+    gen = name.split("gen")[-1]
+    playerId = str(name.split("player")[1]).split("gen")[0]
+    file = f"\\data\\attempt{attemptNo}\\gen{fill0(gen)}\\players\\{name}.txt"
+    filepath = os.getcwd() + file
+    
+    with open(filepath, 'r') as rfile:
+        toRead = rfile.read()
+    data = toRead.split('\n')
+    print(data)
+    return Player(gen, playerId, 16, brain = data[0])
