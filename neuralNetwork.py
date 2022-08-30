@@ -12,7 +12,7 @@ def convert_to_fraction(string):
 def tahn3(x):
     return  (3**x-3**(-x))/(3**x+3**(-x))
 
-def mutate(oryginalBrain):
+def mutate_brain(oryginalBrain):
 
     r = random.random()
     
@@ -41,12 +41,12 @@ def add(oryginalBrain, brainSize = 16):
     if len(oryginalBrain) > 50 + (6 * brainSize):
         return delete(oryginalBrain, brainSize)
     r1 = random.randrange(len(oryginalBrain))
-    r2 = random.randrange(len(10))
+    r2 = random.randrange(10)
     return oryginalBrain[:r1] + str(r2) + oryginalBrain[r1:]
 
 def change(oryginalBrain):
     r1 = random.randrange(len(oryginalBrain))
-    r2 = random.randrange(len(10))
+    r2 = random.randrange(10)
     return oryginalBrain[:r1] + str(r2) + oryginalBrain[r1+1:]
 
 
@@ -55,6 +55,9 @@ class Player:
     def __init__(self, gen, playerId, brainSize, brain: str = None, parent: str = "None") -> None:
         self.name = f"player{fill0(playerId)}gen{fill0(gen)}"
         self.brainSize = brainSize
+        self.gen = gen
+        self.parent = parent
+        self.playerId = playerId
         
 # brain construction:
 # (154312 x brain size) + (1523 x 5) 
@@ -106,12 +109,17 @@ class Player:
         decisions = neuronValues[7:]
         return decisions.index(max(decisions))
 
-    def save(self, attemptNo):
-        file = f"\\genetic-algorithm-in-pong\\data\\attempt{attemptNo}\\gen{fill0(self.gen)}\\players\\{self.name}.txt"
+    def save_network(self, attemptNo):
+        
+        file = f"\\data\\attempt{attemptNo}\\gen{fill0(self.gen)}\\players\\{self.name}.txt"
         filepath = os.getcwd() + file
-        toWrite = f"{self.brain}/n"
-        toWrite +=f"{self.parent}/n"
-        with open(filepath, "w") as file:
-            file.write(toWrite)
+        toWrite = f"{self.brain}\n"
+        toWrite +=f"{self.parent}\n"
+
+        if not os.path.exists(filepath.strip(f"\\{self.name}.txt")):
+            os.makedirs(filepath.strip(f"\\{self.name}.txt"))
+
+        with open(filepath, "w") as wfile:
+            wfile.write(toWrite)
 
 

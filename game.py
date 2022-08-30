@@ -4,19 +4,12 @@ from neuralNetwork import *
 import os
 import time
 
-
-
 bouncerHeight = 64
 bouncerSpeed = 1
 bounceCount = 0
 IsBallIn = True
-
-global bouncer1Img, bouncer2Img
-
 bouncer1Img, bouncer2Img = pygame.Rect(0,0,0,0), pygame.Rect(0,0,0,0)
-winner = None
-attemptNo = 1
-
+looser: int
 def sgn(x):
     if x>0:return 1
     if x == 0: return 0
@@ -85,8 +78,6 @@ class Ball:
                     dx -= v[0]
                     dy -= v[1]
 
-        pygame.draw.rect(win, (255,255,0), pygame.Rect(self.x, self.y, 1, 1))
-
         leftoverDX = preSimulationDX - (self.x - preSimulationX)
         leftoverDY = preSimulationDY - (self.y - preSimulationY)
         self.x += sgn(self.xSpeed) * leftoverDY
@@ -97,25 +88,21 @@ class Ball:
 
 
         global bounceCount
-            #pygame.draw.rect(win, (0,255,255), pygame.Rect(self.x, self.y, 1, 1))
 
 
         if self.y == 0 and  self.ySpeed < 0:
-            #pygame.draw.rect(win, (255,0,255), pygame.Rect(self.x, self.y, 1, 1))
             tmp = self.ySpeed
             self.ySpeed = abs(self.xSpeed)
             self.xSpeed = abs(tmp) * sgn(self.xSpeed)
             return True
 
         if self.y == 255 and self.ySpeed > 0:
-            #pygame.draw.rect(win, (255,0,255), pygame.Rect(self.x, self.y, 1, 1))
             tmp = self.ySpeed
             self.ySpeed = abs(self.xSpeed) * -1
             self.xSpeed = abs(tmp) * sgn(self.xSpeed)
             return True
 
         if self.x == 1 and self.xSpeed < 0:
-            #pygame.draw.rect(win, (255,0,255), pygame.Rect(self.x, self.y, 1, 1))
             self.bounceSpotModifier = p1Bouncer.get_bounce_modifier(self.y)
             tmp = self.xSpeed
             self.xSpeed = abs(self.ySpeed)
@@ -124,7 +111,6 @@ class Ball:
             return True
 
         if self.x == 254 and self.xSpeed > 0:
-            #pygame.draw.rect(win, (255,0,255), pygame.Rect(self.x, self.y, 1, 1))
             self.bounceSpotModifier = p2Bouncer.get_bounce_modifier(self.y)
             tmp = self.xSpeed
             self.xSpeed = abs(self.ySpeed) * -1
@@ -132,11 +118,8 @@ class Ball:
             bounceCount += 1
             return True
 
-        
         return False
 
-
-#
 class Bouncer:
     def __init__(self, posX) -> None:
         self.posX = posX
@@ -157,7 +140,7 @@ class Bouncer:
 # bounce bounceSpotModifier changes the speed of ball, if bouncer misses the ball returns 0 
     def get_bounce_modifier(self, y):
         
-        global winner
+        global looser
         if self.lowEnd >= y and self.highEnd <= y:
             distanceToY = abs(y-self.highEnd - bouncerHeight//2)
             if distanceToY < bouncerHeight//8:
@@ -167,13 +150,13 @@ class Bouncer:
             return 1
         global IsBallIn
         IsBallIn = False
-        winner = sgn(self.posX)
+        looser = sgn(self.posX)
         return 0
 
 
-def play_a_game(players: tuple, seed: int = random.randrange(1016)):
+def play_a_game(players: tuple, seed: int = random.randrange(1016), doDisplay = False):
     
-    global winner
+    global looser
     global IsBallIn
     global bounceCount
     global p1Bouncer, p2Bouncer
@@ -189,13 +172,12 @@ def play_a_game(players: tuple, seed: int = random.randrange(1016)):
     ball = Ball(seed%254+1,(seed%2)*2-1, (((seed%4)//2))*2-1)
     timer = 0
 
-    initialize_drawing()
 
     while IsBallIn:
-        draw_game(ball, p1Bouncer, p2Bouncer)
-        # if bounceCount == 18:
-        #     input()
-
+        
+        if doDisplay:
+            draw_game(ball, p1Bouncer, p2Bouncer)
+     
         timer += 1
         ball.timeModifier = round(bounceCount*bounceCount*0.01 + 1)
         ball.move()
@@ -214,25 +196,33 @@ def play_a_game(players: tuple, seed: int = random.randrange(1016)):
 
     #returns data needed to save, cannot save here because does not know gen and gameId
     #log[0] is idex of winner in players
-
-    return (winner, bounceCount, seed)
+    winner = int(not looser)
+    log = (winner, bounceCount, seed)
+    return log
     
-def save_game(players, log, gen, gameId):
-    file = f"\\genetic-algorithm-in-pong\\data\\attempt{attemptNo}\\gen{fill0(gen)}\\games\\game{fill0(gameId)}gen{fill0(gen)}.txt"
-    filepath = os.getcwd() + file
-    toWrite = f"{players[0].name} vs {players[1].name}/n"
-    toWrite +=f"{log[2]}/n"
-    toWrite +=f"{log[0]}/n"
-    toWrite +=f"{log[1]}/n"
+def save_game(players, log: tuple, gen, gameId, attemptNo):
 
+    file = f"\\data\\attempt{attemptNo}\\gen{fill0(gen)}\\games\\game{fill0(gameId)}gen{fill0(gen)}.txt"
+    filepath = os.getcwd() + file
+    toWrite = f"{players[0].name} vs {players[1].name}\n"
+    toWrite +=f"{log[2]}\n"
+    toWrite +=f"{log[0]}\n"
+    toWrite +=f"{log[1]}\n"
+
+
+    if not os.path.exists(filepath.strip(f"\\game{fill0(gameId)}gen{fill0(gen)}.txt")):
+        os.makedirs(filepath.strip(f"\\game{fill0(gameId)}gen{fill0(gen)}.txt"))
     with open(filepath, 'w') as wfile:
         wfile.write(toWrite)
 
-def read_game(gen, gameId):
-    file = f"\\genetic-algorithm-in-pong\\data\\attempt{attemptNo}\\gen{fill0(gen)}\\games\\game{fill0(gameId)}gen{fill0(gen)}.txt"
+def replay_game(gen, gameId, attemptNo):
+    initialize_drawing()
+    file = f"\\data\\attempt{attemptNo}\\gen{fill0(gen)}\\games\\game{fill0(gameId)}gen{fill0(gen)}.txt"
     filepath = os.getcwd() + file
     with open(filepath, 'r') as rfile:
         toRead = rfile.read()
+    data = toRead.split('\n')
+    print(data)
 
 def initialize_drawing():
     pygame.init()
@@ -245,7 +235,7 @@ def draw_game(ball, p1Bouncer: Bouncer, p2Bouncer:Bouncer):
 
     global bouncer1Img
     global bouncer2Img
-    time.sleep(0.001)
+    time.sleep(0.01)
     
     pygame.draw.rect(win, (0,0,0), pygame.Rect(bouncer1Img))
     pygame.draw.rect(win, (0,0,0), pygame.Rect(bouncer2Img))
@@ -258,7 +248,3 @@ def draw_game(ball, p1Bouncer: Bouncer, p2Bouncer:Bouncer):
     bouncer2Img = pygame.Rect(p2Bouncer.posX-1, p2Bouncer.highEnd, 1, p2Bouncer.lowEnd - p2Bouncer.highEnd)
 
     pygame.display.update()
-
-print(play_a_game((Player(0,0,16, "2962002178200263828017493067689927259614674561082926627623621204269956299544861619071519854706114178017987120872598502206647480500149283"),
-                Player(0,0,16, "2065216056286540731964788133229977355704872542009971429237186953114294405058590826391403880056898570023122232212663581462261372286922779"))))
-input()
