@@ -133,5 +133,4 @@ def get_player(name, attemptNo):
     with open(filepath, 'r') as rfile:
         toRead = rfile.read()
     data = toRead.split('\n')
-    print(data)
     return Player(gen, playerId, 16, brain = data[0])

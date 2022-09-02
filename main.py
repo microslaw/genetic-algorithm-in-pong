@@ -5,11 +5,11 @@ from neuralNetwork import *
 
 
 #paramaters:
-attemptNo = 2
+attemptNo = 5
 #attemptNo refers to different versions with changed global parameters and bugfixes 
 brainSize = 16
-populationSize = 100
-maxGenerations = 500
+populationSize = 5000
+maxGenerations = 5000
 
 #Generate first players
 players: list[Player] = []

@@ -154,7 +154,7 @@ class Bouncer:
         return 0
 
 
-def play_a_game(players: tuple, seed: int = random.randrange(1016), doDisplay = False):
+def play_a_game(players: tuple, seed: int = -1, doDisplay = False):
     
     global looser
     global IsBallIn
@@ -166,6 +166,9 @@ def play_a_game(players: tuple, seed: int = random.randrange(1016), doDisplay = 
     p1,p2 = players
     IsBallIn  = True
     bounceCount = 0
+    if seed == -1:
+        seed = random.randrange(1016)
+
 
     p1Bouncer = Bouncer(0)
     p2Bouncer = Bouncer(255)
@@ -177,6 +180,7 @@ def play_a_game(players: tuple, seed: int = random.randrange(1016), doDisplay = 
         
         if doDisplay:
             draw_game(ball, p1Bouncer, p2Bouncer)
+
      
         timer += 1
         ball.timeModifier = round(bounceCount*bounceCount*0.01 + 1)
@@ -193,11 +197,10 @@ def play_a_game(players: tuple, seed: int = random.randrange(1016), doDisplay = 
             p2Bouncer.up()
         elif p2Action == 2:
             p2Bouncer.down()
-
     #returns data needed to save, cannot save here because does not know gen and gameId
-    #log[0] is idex of winner in players
+    #log[0] is idex of winner in players; bounceCount increments on goal, -1 adresses this
     winner = int(not looser)
-    log = (winner, bounceCount, seed)
+    log = (winner, bounceCount-1, seed)
     return log
     
 def save_game(players, log: tuple, gen, gameId, attemptNo):
@@ -251,4 +254,3 @@ def draw_game(ball, p1Bouncer: Bouncer, p2Bouncer:Bouncer):
 
     pygame.display.update()
 
-replay_game(68, 86, 2)
